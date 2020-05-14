@@ -23,7 +23,7 @@ pip install gpflow
 pip install keras
 pip install progress
 ```
-Following this all code should be executable using `Python 3.8.0`. The `.db` file is an [sqlite database](https://www.sqlite.org/index.html) which I interacted with using [DBeaver](https://dbeaver.io/).
+Following this all code should be executable using `Python 3.8.0`. It is suggested that the scripts are ran using the command line (by double clicking on the script) especially for the classifier scripts (`analyse-*.py`) because of progress bar support and better performance. The `.db` file is an [sqlite database](https://www.sqlite.org/index.html) which I interacted with using [DBeaver](https://dbeaver.io/).
 
 # Structure
 To explain briefly, the method was as follows:
