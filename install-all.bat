@@ -1,0 +1,11 @@
+pip install numpy
+pip install matplotlib
+pip install peewee
+pip install schedule
+pip install pandas
+pip install seaborn
+pip install sklearn
+pip install tensorflow
+pip install gpflow
+pip install keras
+pip install progress
