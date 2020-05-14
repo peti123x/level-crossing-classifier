@@ -5,7 +5,8 @@ The project was undertaken as partial fulfillment of my BSc Mathematics & Comput
 The project is concerning whether the traversability of a level crossing can be approximated by a classifier based on observed data. Modern navigation applications do not know the difference between
 a level crossing that is traversable and one that is not; in many cases, drivers could be rerouted away from level crossings to save them time, especially when the classifier recognises that an unusually long waiting time
 is to be anticipated. The data the classifier based on is a simulated time series of how a level crossing's barriers react relative to train traffic. This was realised by gathering arrival times of trains, which were later transformed
-to the time series using an algorithm. Then I have implemented various classifiers based on this data which demonstrate that the traversability of level crossings can be modelled and this repository contains the code I have used to develop the classifiers as well as some 
+to the time series using an algorithm. The time series data is most accurately captured by some sort of IoT device (like a sensor near tracks or a camera using computer vision) but this was not possible in this case. 
+Following this I have implemented various classifiers based on the generated data which demonstrate that the traversability of level crossings can be modelled and this repository contains the code I have used to develop the classifiers as well as some 
 scripts used to generate some graphs for the written document. 
 # Installation and running
 There are many dependencies, however there is a .bat file which runs the following commands, installing all dependencies:
@@ -22,7 +23,7 @@ pip install gpflow
 pip install keras
 pip install progress
 ```
-Following this all code should be executable using `Python 3.8.0`. The `.db` file is an [sqlite database](https://www.sqlite.org/index.html) which I interacted with using [DBeaver](https://dbeaver.io/) 
+Following this all code should be executable using `Python 3.8.0`. The `.db` file is an [sqlite database](https://www.sqlite.org/index.html) which I interacted with using [DBeaver](https://dbeaver.io/).
 
 # Structure
 To explain briefly, the method was as follows:
@@ -30,6 +31,9 @@ To explain briefly, the method was as follows:
 2. Convert to time series format using an algorithm
 3. Load the time series to a dataframe, preprocess using feature engineering
 4. Create classifier
+
+
+
 Each of these tasks are achieved by separate script files, here is what they each do:
 - `init_db.py` initialises a database, which can be used later on. This is where the train information is saved, `trains.db`.
 - `scraper.py` is the file responsible for scraping live information from the NationalRail website. To change the station(s) monitored, change the array of URLs in the body. 
