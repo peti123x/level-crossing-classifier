@@ -9,7 +9,7 @@ to the time series using an algorithm. The time series data is most accurately c
 Following this I have implemented various classifiers based on the generated data which demonstrate that the traversability of level crossings can be modelled and this repository contains the code I have used to develop the classifiers as well as some 
 scripts used to generate some graphs for the written document. 
 # Installation and running
-There are many dependencies, however there is a .bat file which runs the following commands, installing all dependencies:
+There are many dependencies, the `install-all.bat` file runs the following commands, installing all dependencies (or you may install manually):
 ```
 pip install numpy
 pip install matplotlib
