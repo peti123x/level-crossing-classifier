@@ -25,6 +25,7 @@ from keras import backend as K
 
 #import backup_db as backup
 
+#scoring functions for ANN
 def recall_m(y_true, y_pred):
     true_positives = K.sum(K.round(K.clip(y_true * y_pred, 0, 1)))
     possible_positives = K.sum(K.round(K.clip(y_true, 0, 1)))
@@ -45,7 +46,6 @@ def f1_m(y_true, y_pred):
     recall = recall_m(y_true, y_pred)
     return 2*((precision*recall)/(precision+recall+K.epsilon()))
 
-#Macro, much lower
 def f1_macro(y_true, y_pred):
     y_pred = K.round(y_pred)
     tp = K.sum(K.cast(y_true*y_pred, 'float'), axis=0)
@@ -60,7 +60,7 @@ def f1_macro(y_true, y_pred):
     f1 = tf.where(tf.is_nan(f1), tf.zeros_like(f1), f1)
     return K.mean(f1)
 
-#Struct
+#Structure for the model
 df= pd.DataFrame(columns=["start-sin", "start-cos","start", "close-sin", "close-cos", "close", "state", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"])
 import create_load_df as factory
 df = factory.start(df, False)
@@ -71,6 +71,7 @@ with pd.option_context('display.max_rows', None, 'display.max_columns', None):
 
 print("Create classifiers... \n")
 
+#Create train and test sets
 train, test = train_test_split(df, test_size=0.2, shuffle=True)
 xlabels = ['start-sin', 'start-cos', 'prev-close-sin', 'prev-close-cos', 'state-lag','monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
 
@@ -79,6 +80,7 @@ train_y = train['state']
 test_x = test[xlabels]
 test_y = test['state']
 
+#Define properties of ANN
 hiddenLayers = 1
 neurons = 3
 hidden_neurons = int(train_x.shape[0]/(3*(neurons+1)))
@@ -89,20 +91,21 @@ opt = optimizers.SGD(lr=0.0005)
 #opt = optimizers.Adam(learning_rate=0.005, beta_1 = 0.95, beta_2=0.995, amsgrad=False)
 
 model = Sequential()
-model.add(Dense(units=neurons, activation="relu", input_shape=(12,)))
+model.add(Dense(units=neurons, activation="relu", input_shape=(len(xlabels),)))
 
 model.add(Dense(units=2*hidden_neurons, activation="relu", input_shape=(18632,)))
 
 model.add(Dense(units=1, activation="sigmoid"))
 model.compile(loss='binary_crossentropy', optimizer=opt, metrics=['acc',f1_m,precision_m, recall_m])
 fit = model.fit(train_x, train_y, epochs=ep)
-
+#Predict
 pred = model.predict(test_x)
-
+#Performance
 loss, accuracy, f1_score, precision, recall = model.evaluate(test_x, test_y, verbose=0)
 
 print(model.summary())
 
+#Plot performance
 plot.plot(fit.history['acc'], label="Accuracy")
 plot.plot(fit.history['f1_m'], label="F1 Mean")
 plot.plot(fit.history['precision_m'], label="Precision")

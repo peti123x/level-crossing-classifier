@@ -36,12 +36,14 @@ def writeToFile(file, content):
 def generateEntry(item):
     return str(item[0]) + ","+str(item[1])+","+str(item[2])
 
+#Convert seconds to hours, minutes and seconds
 def convertFromSec(s):
     hrs = np.floor(s/3600)
     m = np.floor(((s/3600) - hrs)*60)
     s = np.floor(s -(hrs*3600)-(m*60))
     return hrs, m, s
 
+#Output CV scores
 def show(results, fname=None, send=False):
     mean_score = results.cv_results_['mean_test_score']
     std_score = results.cv_results_['std_test_score']
@@ -84,10 +86,11 @@ def report_average(*args):
     res = reduce(lambda x, y: x.add(y, fill_value=0), report_list) / len(report_list)
     return res.rename(index={res.index[-1]: 'avg / total'})
 
+#Return list of files in a directory
 def getFilesFromDir(dirname):
     files = glob.glob(dirname + "*.csv")
     return files
-
+#Return array of entries from a .csv
 def readCSV(fname):   
     myFile = open(fname) 
     row =0 
@@ -113,8 +116,9 @@ def tsAsSeconds(ts):
     dt = datetime.datetime.strptime(ts, fmt)
     return dt.second + (dt.minute * 60) + (dt.hour * 60 *60)
 
+#This is the function which reads in the observations from each file. The input is the content of a .csv file `content`
+#processing all entries from the first until last.
 def transformData(df, content, day):
-    
     fmt = "%H:%M:%S"
     #Look at opening time of first entry
     opening = content[0][0]
@@ -131,7 +135,7 @@ def transformData(df, content, day):
             #secondsElapsed += (entries*60) + outstanding
             secondsElapsed += dt.seconds
             continue
-        ###
+        #Pad with intervals between two sessions as state of False
         time = dt.seconds
         df = df.append({"start": secondsElapsed, "close": secondsElapsed+time, "length": int(time), "state": False, day: True}, ignore_index=True)
         secondsElapsed += time
@@ -139,16 +143,16 @@ def transformData(df, content, day):
         #Now store the session info as True
         df = df.append({"start": secondsElapsed, "close": secondsElapsed+int(entry[2]), "length": int(entry[2]), "state": True, day: True}, ignore_index=True)
         secondsElapsed += int(entry[2])
-
+        #next
         prevClose = entry[1]
-    #Close to midnight
+    #This is from the last train until midnight
     dt = datetime.datetime.strptime("23:59:59", fmt) - datetime.datetime.strptime(content[-1][1], fmt)
     df = df.append({"start": secondsElapsed,"close": secondsElapsed+dt.seconds+1, "length": int(dt.seconds+1), "state": False, day: True}, ignore_index=True)
     secondsElapsed += dt.seconds+1
         
     return df
 
-
+#Processing
 def createDF(df, autoSave, saveFileAs, multi=True):
     weekdays = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
     for day in weekdays:
@@ -160,9 +164,9 @@ def createDF(df, autoSave, saveFileAs, multi=True):
         i = 1
         for file in files:
             #print("Processing " + str(i) + "/"+str(len(files))+"...")
+            #process the file, add to the dataframe and move on.
             content = readCSV(file)
             df = transformData(df, content, day)
-            #print(df.size)
             i = i + 1
             bar.next()
         #print(day + " finished.")
@@ -179,35 +183,37 @@ def createDF(df, autoSave, saveFileAs, multi=True):
     df['close-cos'] = df['close'].transform(lambda x: np.cos(2*np.pi*x/seconds_in_day))
     #Fill all NaN values with False (this is for onehot encoding)
     df = df.fillna(False)
-    #TODO: lag one-hot encoded state
-    #Change the state variables
+    #Create the classification labels for multi class
     #State = 0: This is still equivalent to False
     #State = 1: This is for range 0 < length <= 100
     #State = 2: This is for range 100 < length <= 300
     #State = 3: This is for range length > 300
     if multi:
+        #Change states to numbers
         df.loc[(df['length'] > 300) & (df['state'] == True), "state"] = 3
         df.loc[(df['length'] <= 300) & (df['length'] > 100) & (df['state'] == True), "state"] = 2
         df.loc[(df['length'] <= 100) & (df['length'] > 0) & (df['state'] == True), "state"] = 1
         df.loc[df['state'] == False, "state"] = 0
-        #
+        #Then fill features based on these
         df.loc[df['state'] == 3, "wait-categ-long"] = True
         df.loc[df['state'] == 2, "wait-categ-medium"] = True
         df.loc[df['state'] == 1, "wait-categ-short"] = True
         df.loc[df['state'] == 0, "wait-categ-none"] = True
-        #normalise length
+        #normalise length feature
         min_max_scaler = preprocessing.MinMaxScaler()
         length_scaled = min_max_scaler.fit_transform(df[['length']])
         df['length'] = length_scaled
-    #add lag features
+    #add lag features of start sin/cos, close sin/cos, lag the state and the length. Not all of these are used
     df = pd.concat([df, df['start-sin'].shift(1).rename("start-sin-lag"), df['start-cos'].shift(1).rename("start-cos-lag"), df['state'].shift(1).rename("state-lag")], axis=1)
     df = pd.concat([df, df['close-sin'].shift(1).rename("prev-close-sin"), df['close-cos'].shift(1).rename("prev-close-cos"), df['length'].shift(1).rename("prev-length")], axis=1)
-    #state shift
+    #shift one hot encoded features. 
     if multi:
         df = pd.concat([df, df["wait-categ-long"].shift(1).rename("categ-long-lag"), df["wait-categ-medium"].shift(1).rename("categ-medium-lag"),
                         df["wait-categ-short"].shift(1).rename("categ-short-lag"), df['wait-categ-none'].shift(1).rename("categ-none-lag")], axis=1)
+    #get rid of unusable rows due to shifts (if any)
     df = df.dropna()
 
+    #If saving is set up then just save, otherwise ask for name of the file and save
     if autoSave == 0:
         saveName = saveFileAs
     else:
@@ -222,7 +228,7 @@ def loadDF():
     df = pd.read_pickle(name + '.h5')
     return df
 
-
+#This is the wrapper function for the script. 
 def start(df, multi=True):
     autoSave = 0
     saveFileAs = "dataframe_" + datetime.datetime.strftime(datetime.datetime.now(), "%Y-%m-%d-%H-%M-%S")
@@ -251,12 +257,5 @@ def start(df, multi=True):
         df = loadDF()
     return df
 
-
-
-
 #Define dataframe
 df= pd.DataFrame(columns=["start-sin", "start-cos","start", "close-sin", "close-cos", "close", "length", "state", "wait-categ-none", "wait-categ-short", "wait-categ-medium", "wait-categ-long", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"])
-
-
-#For each weekday crawl through files, append to dataframe whilst one-hot encoding
-

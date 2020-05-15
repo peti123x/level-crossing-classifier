@@ -9,22 +9,26 @@ import keyboard
 import schedule
 import backup_db as backup
 
+#Define a buffer for each link. This contains trains which have already been recognised to avoid duplication.
 buffers = [{}, {}]
 
+#Empties the buffer
 def clearBuffer():
     print("Buffer cleaned")
     for buffer in buffers:
        for key in list(buffer):
            del buffer[key]
 
+#Sends the database file as an attachment to an email
 def sendDB():
     backup.sendMail("trains.db")
 
+#Scheduler to backup db and clear the buffer every day
 schedule.every().day.at("01:00").do(sendDB)
 schedule.every().day.at("02:33").do(clearBuffer)
 #schedule.every(1).minutes.do(sendDB)
 
-####Define DB stuff
+####Define DB stuff, this is needed because there is interaction with the database. Cant be exported to a different script
 db = SqliteDatabase('trains.db')
 class Train(Model):
     id = AutoField()
@@ -44,8 +48,6 @@ db.connect()
 db.create_tables([Train])
 ####DB is defined
 
-#Log will have the following format:
-#Origin|Dest|Due|Delay|Barrier down|Barrier up|Barrier length|No trains passed
 
 ########
 #Writes new entry to the DB
@@ -70,13 +72,15 @@ def updateRecord(og, dest, due, delay, est, canc, day):
         train.cancelled = canc
         train.save()
 
+#Ex
 #updateRecord("bla", "Sheffield", 0, 0, 0, 0)
 
-#Return the day as a string
+#Return current day as a string
 def nameOfDay():
     now = date.today()
     return now.strftime('%A').lower()
 
+#Connect to the page and return the parsed content and a boolean to signal success
 def getTrainList(url):
     try:
         conn = urlopen(url)
@@ -98,6 +102,7 @@ def getTrainList(url):
         print("HTTP Error. Will try again ...")
         return "", False
 
+#Handle a train depending on whether it exists in the buffer already or not
 def checkInBuffers(buffers, buffrstr, due, currUrl):
     isArriving = 1
     if "dep" in currUrl:
@@ -122,25 +127,29 @@ def checkInBuffers(buffers, buffrstr, due, currUrl):
         writeRecord(origin, dest, due, delay, est, cancelled, nameOfDay())
     return buffers
 
-#url = "http://ojp.nationalrail.co.uk/service/ldbboard/dep/LCN"
-#url = "https://ojp.nationalrail.co.uk/service/ldbboard/arr/LCN"
+#This is the list of urls being monitored
 urls = ["https://ojp.nationalrail.co.uk/service/ldbboard/arr/LCN",
         "http://ojp.nationalrail.co.uk/service/ldbboard/dep/LCN"]
 #buffers = [{}, {}]
 
+#Run indefinitely
 while True:
+    #Cycle between each url
     for url in urls:
+        #Parse content
         tablebody, trains = getTrainList(url)
+        #If found something
         if trains:
+            #Process each row in the table of the page
             rows = tablebody.find_all("tr")
             #For each row
             for item in rows:
-                #Due time
+                #Get due time
                 due = item.find("td").text.strip()
 
                 #Origin or destination depending on context
                 #If looking at arriving link then all trains are going to Lincoln
-                
+                #This is of course a bit different if we are not exclusively monitoring just a single station
                 if "arr" in url:
                     dest = "LNC"
                     origin = item.select_one("td:nth-of-type(2)").text.replace(" ", "").replace("\n","")
@@ -173,6 +182,9 @@ while True:
                 #Create entry for buffer
                 buffrstr = due+dest+origin+str(delay)+est+str(cancelled)
                 buffers = checkInBuffers(buffers, buffrstr, due, url)
+
+    #When the cycle of parsing is done, check buffer to handle cyclic deletes of old trains
+    #This is needed otherwise the buffer becomes huge over the day and becomes too slow
     #Iterate through dictionary by k,v
     for buffer in buffers:
         for key in list(buffer):
@@ -183,7 +195,7 @@ while True:
             trainTime = key.split(":")
             trainTime = int(trainTime[0])
             transformed = trainTime
-            #If flips it over, then transform the time, this is the difficult case
+            #If two hours after the train is after midnight then transform the time, this is the difficult case
             if trainTime + 2 >= 24:
                 transformed = trainTime - 24 + 2
                 #Compare accordingly
@@ -198,5 +210,7 @@ while True:
                     del buffer[key]
     ts = strftime("%H:%M:%S", gmtime())
     print(str(ts) + ":" + str(buffers))
+    #Run tasks
     schedule.run_pending()
+    #Wait a little bit before next cycle to not overload NationalRail
     time.sleep(2)

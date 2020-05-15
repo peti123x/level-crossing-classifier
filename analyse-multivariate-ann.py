@@ -43,7 +43,6 @@ def f1_m(y_true, y_pred):
     recall = recall_m(y_true, y_pred)
     return 2*((precision*recall)/(precision+recall+K.epsilon()))
 
-#Macro, much lower
 def f1_macro(y_true, y_pred):
     y_pred = K.round(y_pred)
     tp = K.sum(K.cast(y_true*y_pred, 'float'), axis=0)
@@ -58,7 +57,7 @@ def f1_macro(y_true, y_pred):
     f1 = tf.where(tf.is_nan(f1), tf.zeros_like(f1), f1)
     return K.mean(f1)
 
-#Save dataframe
+#Build the model functionally
 def build_model():
     hiddenLayers = 1
     neurons = 500
@@ -83,7 +82,7 @@ df= pd.DataFrame(columns=["start-sin", "start-cos","start", "close-sin", "close-
 
 #import backup_db as backup
 import create_load_df as factory
-
+#Load
 df = factory.start(df)
 
 print("Create classifiers... \n")
@@ -93,40 +92,11 @@ with pd.option_context('display.max_rows', None, 'display.max_columns', None):
     print(df)
     print("")
 
-#content = readCSV(files[0])
-#ds = transformData(df, content)
-
-#train, test = train_test_split(df, test_size=0.1, shuffle=True)
-
-#train_x = train[['start-sin', 'start-cos', 'start-sin-lag', 'start-cos-lag', 'prev-close-sin', 'prev-close-cos', 'prev-length', 'state-lag', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']]
-#train_y = train[['wait-categ-none', 'wait-categ-short', 'wait-categ-medium', 'wait-categ-long']]
-#test_x = test[['start-sin', 'start-cos', 'start-sin-lag', 'start-cos-lag', 'prev-close-sin', 'prev-close-cos', 'prev-length', 'state-lag', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']]
-#test_y = test[['wait-categ-none', 'wait-categ-short', 'wait-categ-medium', 'wait-categ-long']]
-#test_y = test_y.replace(False, 0).replace(True,1)
-#train_y = train_y.replace(False, 0).replace(True,1)
-
-
-df = shuffle(df)
-
-#x = df[['start-sin', 'start-cos', 'start-sin-lag', 'start-cos-lag', 'prev-close-sin', 'prev-close-cos', 'prev-length', 'state-lag', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']]
-#y = df[['wait-categ-none', 'wait-categ-short', 'wait-categ-medium', 'wait-categ-long']]
-#enforce, this is gone wrong somewhere
-#y = y.replace(False, 0)
-#y = y.replace(True, 1)
-
-
-#old
-#x_labels = ['start-sin', 'start-cos', 'start-sin-lag', 'start-cos-lag', 'prev-close-sin', 'prev-close-cos', 'prev-length', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
-
-#mcm_ann_t3
+#define features for this model
 x_labels = ['start-sin', 'start-cos', 'prev-close-sin', 'prev-close-cos', 'prev-length', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
-#mcm_ann_t4
-#x_labels = ['start-sin', 'start-cos', 'start-sin-lag', 'start-cos-lag', 'prev-close-sin', 'prev-close-cos', 'prev-length', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
-#
-#y_labels = ['wait-categ-none', 'wait-categ-short', 'wait-categ-medium', 'wait-categ-long']
 y_labels = ['wait-categ-none', 'wait-categ-short', 'wait-categ-medium', 'wait-categ-long']
 
-#Take some entries out to see how a balanced dataset performs
+#Sample by category to reduce the data in the model
 #none_s = df.loc[df['wait-categ-none'] == 1].sample(n=1900, random_state=1)
 #short_s = df.loc[df['wait-categ-short'] == 1].sample(n=1900, random_state=1)
 #medium_s = df.loc[df['wait-categ-medium'] == 1]
@@ -134,22 +104,23 @@ y_labels = ['wait-categ-none', 'wait-categ-short', 'wait-categ-medium', 'wait-ca
 #save_df = df
 #df = pd.concat([none_s, short_s, medium_s, long_s])
 
+df = shuffle(df)
 
-print(len(df.loc[df['wait-categ-none'] == 1]))
-print(len(df.loc[df['wait-categ-short'] == 1]))
-print(len(df.loc[df['wait-categ-medium'] == 1]))
-print(len(df.loc[df['wait-categ-long'] == 1]))
+#Print size of each class
+#print(len(df.loc[df['wait-categ-none'] == 1]))
+#print(len(df.loc[df['wait-categ-short'] == 1]))
+#print(len(df.loc[df['wait-categ-medium'] == 1]))
+#print(len(df.loc[df['wait-categ-long'] == 1]))
 
-print("\n")
-ctypes.windll.user32.FlashWindow(ctypes.windll.kernel32.GetConsoleWindow(), True )
-#input()
-
+#Build model
 model = build_model()
+#Define train and test
 train, test = train_test_split(df, test_size=0.2, shuffle=True)
 train_x = train[x_labels]
 train_y = train[y_labels]
 test_x = test[x_labels]
 test_y = test[y_labels]
+#Fit the model and predict
 fit = model.fit(train_x, train_y, epochs=500)
 pred = model.predict(test_x)
 #convert predictions to 1d
@@ -159,8 +130,10 @@ un_onehot = np.argmax(test_y.to_numpy(), axis=1)
 #score per class!
 print(classification_report(un_onehot, predicted_classes))
 
+#flash tray icon signaling this is ready
 ctypes.windll.user32.FlashWindow(ctypes.windll.kernel32.GetConsoleWindow(), True )
 
+#plot the results
 plot.plot(fit.history['f1_m'], label="F1 Mean")
 plot.ylabel("Model F1 mean")
 plot.xlabel("Epoch")
@@ -169,19 +142,26 @@ plot.legend()
 plot.show()
 #input()
 
+
+#*****CV******
+#Here is defined the cross validation process for the ANN
 ep = 500
 n_fold = 5
+#split into n_fold folds
 df_split = np.array_split(df, n_fold)
+#index of currently delegated test set
 test_part = 0
+#scores
 acc = []
 f1 = []
 prec = []
 recalls = []
-
+#histories, for plotting later
 acc_history = []
 f1_history = []
 prec_history = []
 recall_history = []
+#whilst the currently delegated index is smaller than the number of folds (i.e., we are not yet at the end)
 while test_part < n_fold:
     model = build_model()
     train_x = []
@@ -201,24 +181,22 @@ while test_part < n_fold:
         if not i == test_part:
             train_x = pd.concat([train_x, df_split[i][x_labels]], axis=0)
             train_y = pd.concat([train_y, df_split[i][y_labels]], axis=0)
-            #train_x.append(df_split[i][['start-sin', 'start-cos', 'start-sin-lag', 'start-cos-lag', 'prev-close-sin', 'prev-close-cos', 'prev-length', 'state-lag', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']])
-            #train_y.append(df_split[i][['wait-categ-none', 'wait-categ-short', 'wait-categ-medium', 'wait-categ-long']])
         #set this to test partition
         else:
             test_x = df_split[i][x_labels]
             test_y = df_split[i][y_labels]
-    #enforce
+    #enforce integer values instead of booleans
     train_y = train_y.replace(False, 0)
     train_y = train_y.replace(True, 1)
     test_y = test_y.replace(False, 0)
     test_y = test_y.replace(True, 1)
-    #fit
+    #fit this and predict
     fit = model.fit(train_x, train_y, epochs=ep, verbose=1)
     pred = model.predict(test_x)
     
     #score
     loss, accuracy, f1_score, precision, recall = model.evaluate(test_x, test_y, verbose=0)
-    #save
+    #save scores and move on
     acc_history.append(fit.history['categorical_accuracy'])
     f1_history.append(fit.history['f1_m'])
     prec_history.append(fit.history['precision_m'])
@@ -228,8 +206,12 @@ while test_part < n_fold:
     prec.append(precision)
     recalls.append(recall)  
     test_part += 1
-print("CV finished.\n")
 
+#flash tray icon signaling this is ready
+ctypes.windll.user32.FlashWindow(ctypes.windll.kernel32.GetConsoleWindow(), True )
+
+print("CV finished.\n")
+#Print results
 print("Mean Accuracy")
 print(sum(acc)/len(acc))
 print("Mean F1 score")
@@ -239,10 +221,11 @@ print(sum(prec)/len(prec))
 print("Mean Recall rate")
 print(sum(recalls)/len(recalls))
 
+#Display the properties of the FIRST, individual model again
 print("\n First model properties")
 print(classification_report(un_onehot, predicted_classes))
 
-
+#Plot
 fig, ((ax1, ax2), (ax3, ax4)) = plot.subplots(2,2, figsize=(12,6))
 for i in range(len(acc_history)):
     ax1.plot(acc_history[i], label="Fold "+str(i+1))
@@ -274,30 +257,3 @@ ax4.set_ylabel("Performance")
 plot.show()
 
 input()
-
-#Built in CV that does not work with other metrics
-#classifier = KerasClassifier(build_fn=build_model, batch_size=1000, epochs=ep)
-#accuracies = cross_val_score(estimator=classifier, X=x, y=y, cv=10, verbose=5)
-
-#print(accuracies)
-#print("Accuracy mean: " + str(accuracies.mean()))
-#print("Accuracy std: " + str(accuracies.std()))
-
-#For individual model
-#plot.plot(fit.history['acc'], label="Accuracy")
-#plot.plot(fit.history['f1_m'], label="F1 Mean")
-#plot.plot(fit.history['precision_m'], label="Precision")
-#plot.plot(fit.history['recall_m'], label="Recall")
-#plot.ylabel("Model accuracy")
-#plot.xlabel("Epoch")
-#plot.title("Model training accuracy over epochs")
-#plot.legend()
-#plot.show()
-#print("Loss: " + str(loss))
-#print("Accuracy: " + str(accuracy))
-#print("F1: " + str(f1_score))
-#print("Precision: " + str(precision))
-#print("Recall: " + str(recall))
-
-#input()
-

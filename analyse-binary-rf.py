@@ -43,12 +43,14 @@ print("Random forest")
 combinations = 5*7*6*8
 trainingTimes = combinations*5
 cores = 4
-avgTrainTime = 5
+avgTrainTime = 23
 eta = (trainingTimes/cores)*avgTrainTime
 hrs,m,s = factory.convertFromSec(int(eta))
 print("...")
 print("CV expected to take " + str(int(hrs))+":"+str(int(m))+":"+str(int(s)))
 print("...")
+
+
 #Start cv
 cvStart = timeit.default_timer()
 clf = RandomForestClassifier(criterion='entropy', max_features="auto")
@@ -66,6 +68,7 @@ params = {
 #}
 cv = GridSearchCV(clf,params,cv=5, scoring='f1', verbose=6, n_jobs=-1)
 cv.fit(train_x,train_y)
+#Output, set True as third parameter if you want results emailed, as this process is long
 factory.show(cv, "binary_rf_cv")
 cvEnd = timeit.default_timer()
 runtime = cvEnd - cvStart

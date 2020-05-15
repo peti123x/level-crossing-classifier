@@ -9,3 +9,4 @@ pip install tensorflow
 pip install gpflow
 pip install keras
 pip install progress
+pip install beautifulsoup4

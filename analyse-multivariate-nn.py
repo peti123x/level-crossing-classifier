@@ -38,6 +38,7 @@ with pd.option_context('display.max_rows', None, 'display.max_columns', None):
     #print(df)
     print("")
 
+#Sample for smaller data set (this can be commented out
 none_s = df.loc[df['wait-categ-none'] == 1].sample(n=1000, random_state=1)
 short_s = df.loc[df['wait-categ-short'] == 1].sample(n=1000, random_state=1)
 medium_s = df.loc[df['wait-categ-medium'] == 1].sample(n=1000, random_state=1)
@@ -45,12 +46,11 @@ long_s = df.loc[df['wait-categ-long'] == 1]
 save_df = df
 df = pd.concat([none_s, short_s, medium_s, long_s])
 
+#Set up train and test
 train, test = train_test_split(df, test_size=0.2, shuffle=True)
-#input()
 
 x_labels = ['start-sin', 'start-cos', 'prev-close-sin', 'prev-close-cos', 'prev-length', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
 y_labels = ['wait-categ-none', 'wait-categ-short', 'wait-categ-medium', 'wait-categ-long']
-
 
 train_x = train[x_labels]
 train_y = train[y_labels]
@@ -59,7 +59,7 @@ test_x = test[x_labels]
 test_y = test[y_labels]
 
 
-#NearestNeighbour Chosen model
+#NearestNeighbour individual, chosen model
 print("\n")
 print("Nearest Neighbour")
 clf = KNeighborsClassifier(n_neighbors=5, p=2, weights="distance")

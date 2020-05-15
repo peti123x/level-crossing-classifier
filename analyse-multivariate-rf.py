@@ -52,13 +52,13 @@ train, test = train_test_split(df, test_size=0.2, shuffle=True)
 x_labels = ['start-sin', 'start-cos', 'prev-close-sin', 'prev-close-cos', 'prev-length', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
 y_labels = ['wait-categ-none', 'wait-categ-short', 'wait-categ-medium', 'wait-categ-long']
 
-
 train_x = train[x_labels]
 train_y = train[y_labels]
 
 test_x = test[x_labels]
 test_y = test[y_labels]
 
+#Individual, chosen Random Forest model
 #clf = RandomForestClassifier(criterion='entropy', max_features="auto", max_depth=None, min_samples_leaf=2, min_samples_split = 3, n_estimators=2000)
 clf = RandomForestClassifier(criterion='entropy', max_features="auto", max_depth=None, min_samples_leaf=2, min_samples_split = 3, n_estimators=500)
 clf = clf.fit(train_x,train_y)
@@ -69,7 +69,7 @@ print(classification_report(test_y, pred_y))
 
 input()
 
-#Random forest
+#Random forest CV
 print("\n")
 print("Random forest")
 #Give eta

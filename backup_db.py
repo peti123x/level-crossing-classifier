@@ -7,6 +7,7 @@ from email.mime.text import MIMEText
 import time
 import datetime
 
+#Details
 port = 587  # For starttls
 smtp_server = "outlook.office365.com"
 sender_email = "your email address"

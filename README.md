@@ -9,7 +9,7 @@ to the time series using an algorithm. The time series data is most accurately c
 Following this I have implemented various classifiers based on the generated data which demonstrate that the traversability of level crossings can be modelled and this repository contains the code I have used to develop the classifiers as well as some 
 scripts used to generate some graphs for the written document. 
 # Installation and running
-There are many dependencies, the `install-all.bat` file runs the following commands, installing all dependencies (or you may install manually):
+There are many dependencies, the `install-all.bat` file runs the following commands, installing all dependencies (or you may install manually) using pip:
 ```
 pip install numpy
 pip install matplotlib
@@ -22,6 +22,7 @@ pip install tensorflow
 pip install gpflow
 pip install keras
 pip install progress
+pip install beautifulsoup4
 ```
 Following this all code should be executable using `Python 3.8.0`. It is suggested that the scripts are ran using the command line (by double clicking on the script) especially for the classifier scripts (`analyse-*.py`) because of progress bar support and better performance. The `.db` file is an [sqlite database](https://www.sqlite.org/index.html) which I interacted with using [DBeaver](https://dbeaver.io/).
 
