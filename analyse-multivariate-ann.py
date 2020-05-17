@@ -97,12 +97,12 @@ x_labels = ['start-sin', 'start-cos', 'prev-close-sin', 'prev-close-cos', 'prev-
 y_labels = ['wait-categ-none', 'wait-categ-short', 'wait-categ-medium', 'wait-categ-long']
 
 #Sample by category to reduce the data in the model
-#none_s = df.loc[df['wait-categ-none'] == 1].sample(n=1900, random_state=1)
-#short_s = df.loc[df['wait-categ-short'] == 1].sample(n=1900, random_state=1)
-#medium_s = df.loc[df['wait-categ-medium'] == 1]
-#long_s = df.loc[df['wait-categ-long'] == 1]
-#save_df = df
-#df = pd.concat([none_s, short_s, medium_s, long_s])
+none_s = df.loc[df['wait-categ-none'] == 1].sample(n=1700, random_state=1)
+short_s = df.loc[df['wait-categ-short'] == 1].sample(n=1700, random_state=1)
+medium_s = df.loc[df['wait-categ-medium'] == 1]
+long_s = df.loc[df['wait-categ-long'] == 1]
+save_df = df
+df = pd.concat([none_s, short_s, medium_s, long_s])
 
 df = shuffle(df)
 

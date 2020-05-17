@@ -39,12 +39,12 @@ with pd.option_context('display.max_rows', None, 'display.max_columns', None):
     print("")
 
 #Downsampling
-#none_s = df.loc[df['wait-categ-none'] == 1].sample(n=1000, random_state=1)
-#short_s = df.loc[df['wait-categ-short'] == 1].sample(n=1000, random_state=1)
-#medium_s = df.loc[df['wait-categ-medium'] == 1].sample(n=1000, random_state=1)
-#long_s = df.loc[df['wait-categ-long'] == 1]
-#save_df = df
-#df = pd.concat([none_s, short_s, medium_s, long_s])
+none_s = df.loc[df['wait-categ-none'] == 1].sample(n=1000, random_state=1)
+short_s = df.loc[df['wait-categ-short'] == 1].sample(n=1000, random_state=1)
+medium_s = df.loc[df['wait-categ-medium'] == 1].sample(n=1000, random_state=1)
+long_s = df.loc[df['wait-categ-long'] == 1]
+save_df = df
+df = pd.concat([none_s, short_s, medium_s, long_s])
 
 train, test = train_test_split(df, test_size=0.2, shuffle=True)
 #input()

@@ -38,8 +38,17 @@ To explain briefly, the method was as follows:
 Each of these tasks are achieved by separate script files, here is what they each do:
 - `init_db.py` initialises a database, which can be used later on. This is where the train information is saved, `trains.db`.
 - `scraper.py` is the file responsible for scraping live information from the NationalRail website. To change the station(s) monitored, change the array of URLs in the body. 
-- `Simulation.py` processes the `trains.db` file into a time series placed in `\datastream\` folder, broken up by days of the week. 
-- `create_load_df.py` is a snippet which loads the `\datastream\` data, processes it and saves it **or** loads a `pandas` dataframe saved in a `.h5` file. This file is imported by relevant scripts rather than being used on its own.
+- `Simulation.py` processes the `trains.db` file into a time series placed in `/datastream/` folder, broken up by days of the week. 
+- `create_load_df.py` is a snippet which loads the `/datastream/` data, processes it and saves it **or** loads a `pandas` dataframe saved in a `.h5` file. This file is imported by relevant scripts rather than being used on its own.
 - `backup_db.py` is the script responsible for sending a copy of a file to an email address.
 - `analyse-binary-*` are used to create and evaluate the classifiers. If you choose to load a model, use **models/bcm** when prompted for the name of the file. 
 - `analyse-multivariate-*` are used to create and evaluate the multi class classifiers. In this case use **models/mcm** when prompted for the name of the file, unless you opt to generate a new model. 
+
+# Saved models
+The models contained in `/models/` are saved pandas dataframes. There are two models for the binary and multi class feature set each; the `_experimental.h5` files contain a much wider range of features, though 
+they are not neccessarily used in the final models. If you desire to reproduce some results, or view the contents of the used dataset, the recommended files to use are `bcm.h5` and `mcm.h5`. To easily access the contents, use
+```
+inspect-df <model-name> -d
+```
+from the command line (in the folder of the repository), where `<model-name>` is for example `models/mcm.h5`. The flag `-d` means that **all** data is shown, which may take some time to load on some computers. If you want a quick glance,
+simply get rid of the flag. 
