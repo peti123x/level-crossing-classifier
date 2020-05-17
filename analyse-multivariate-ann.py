@@ -96,6 +96,7 @@ with pd.option_context('display.max_rows', None, 'display.max_columns', None):
 x_labels = ['start-sin', 'start-cos', 'prev-close-sin', 'prev-close-cos', 'prev-length', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
 y_labels = ['wait-categ-none', 'wait-categ-short', 'wait-categ-medium', 'wait-categ-long']
 
+unsampled_df = df
 #Sample by category to reduce the data in the model
 none_s = df.loc[df['wait-categ-none'] == 1].sample(n=1700, random_state=1)
 short_s = df.loc[df['wait-categ-short'] == 1].sample(n=1700, random_state=1)
@@ -139,12 +140,14 @@ plot.ylabel("Model F1 mean")
 plot.xlabel("Epoch")
 plot.title("Model training f1 mean over epochs")
 plot.legend()
-plot.show()
+#plot.show()
 #input()
 
 
 #*****CV******
 #Here is defined the cross validation process for the ANN
+df = unsampled_df
+
 ep = 500
 n_fold = 5
 #split into n_fold folds
@@ -226,7 +229,7 @@ print("\n First model properties")
 print(classification_report(un_onehot, predicted_classes))
 
 #Plot
-fig, ((ax1, ax2), (ax3, ax4)) = plot.subplots(2,2, figsize=(12,6))
+fig, ((ax1, ax2), (ax3, ax4)) = plot.subplots(2,2, figsize=(12,12))
 for i in range(len(acc_history)):
     ax1.plot(acc_history[i], label="Fold "+str(i+1))
     ax2.plot(f1_history[i], label="Fold " + str(i+1))
