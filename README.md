@@ -45,7 +45,7 @@ Each of these tasks are achieved by separate script files, here is what they eac
 - `analyse-multivariate-*` are used to create and evaluate the multi class classifiers. In this case use **models/mcm** when prompted for the name of the file, unless you opt to generate a new model. 
 
 # Saved models
-The models contained in `/models/` are saved pandas dataframes. They are the data sets used for the training and testing used in the models. There are two sets for the binary and multi class feature set each; the `_experimental.h5` files contain a much wider range of features, though 
+The models contained in `/models/` are saved pandas dataframes. They are the data sets used for the training and testing of the models. There are two sets for the binary and multi class feature set each; the `_experimental.h5` files contain a much wider range of features, though 
 they are not neccessarily used in the final models. If you desire to reproduce some results, or view the contents of the used dataset, the recommended files to use are `bcm.h5` and `mcm.h5`. To easily access the contents, use
 ```
 inspect-df <model-name> -d
